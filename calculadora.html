@@ -1,0 +1,561 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#5D5CDE">
+    <meta name="description" content="Calculadora para Android">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Calculadora Android</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#3C3C3C',
+                        accent: '#FF9500',
+                    }
+                }
+            },
+            darkMode: 'class',
+        }
+    </script>
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            font-family: 'Roboto', sans-serif;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .calculator-container {
+            max-width: 100%;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            border-radius: 0;
+        }
+        
+        .calculator-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+            padding-bottom: 2rem;
+            background: transparent;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        
+        .calculator-buttons {
+            min-height: 60%;
+            padding: 0.5rem;
+        }
+        
+        .calculator-button {
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%;
+            position: relative;
+            border-radius: 50%;
+            transition: background-color 0.1s;
+            overflow: hidden;
+        }
+        
+        .calculator-button-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+        
+        .no-highlight {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        @media (min-height: 700px) {
+            .calculator-button-content {
+                font-size: 1.8rem;
+            }
+        }
+        
+        /* Status bar styling */
+        .status-bar {
+            height: 24px;
+            padding: 0 10px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+    </style>
+    
+    <!-- Manifest file for PWA -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;Calculadora&quot;,
+        &quot;short_name&quot;: &quot;Calc&quot;,
+        &quot;start_url&quot;: &quot;./index.html&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#5D5CDE&quot;,
+        &quot;theme_color&quot;: &quot;#5D5CDE&quot;,
+        &quot;orientation&quot;: &quot;portrait&quot;,
+        &quot;icons&quot;: [
+            {
+                &quot;src&quot;: &quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAj1QTFRF4LWp36yd////4biq4biq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4Liq4LiqkpKHrgAAAL50Uk5TAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Nzg5Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/6D4S8QAAAABYktHRL6k3IPDAAABaUlEQVQ4y63TSS9DURSH8V+TUg0RQyRiDBLEEFRQwpiQmNJatKZYa2itaqgolibaav1zbk8j8Xa5J+fL+eR3ctdSmK4jR4+lzlXpRLrYx6hgEUmGchlXpJEgSUYY6pVkeEbrZ56ZBnKNZr5Q2mDGR/ELCsq8WmZxKqwUl7iUXOrRUiZOhZXyipBW2LTElCqNUmGl0quM0ijOhBVtyq2MUtVeKxVWarRQKoxoSEhFNb8jzBCPigg1Wlahp4bG3wglcgwwkWPUSEhFjZZV+I70nI4Q9F2NNXVCqai15U6IsdQMYxMbQVMw9kpLmFAqfFqn0KvVvMNCUqnw29/e+YRW7U2+LhWHCnvr2ztbcaXbp2yY4VJhK9DevrGzo8/fybbWshwrLJyT2wglfK2tdtUkVlgIs9cEsrbWJFYoLm+RijRiJRd6iGxC+QCJUCw+Ob28zXPv3o9vH2+vL8/3vDXgn7T/r1/1TSj/H/9/yfMNB1HgsPv1u4YAAAAASUVORK5CYII=&quot;,
+                &quot;sizes&quot;: &quot;64x64&quot;,
+                &quot;type&quot;: &quot;image/png&quot;
+            }
+        ]
+    }">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="calculator-container bg-white dark:bg-gray-800">
+        <!-- Status bar - Simula a barra de status do Android -->
+        <div class="status-bar bg-primary dark:bg-primary text-white">
+            <span id="clock">12:00</span>
+        </div>
+        
+        <!-- Tela da calculadora -->
+        <div class="calculator-screen">
+            <div id="history" class="text-sm text-gray-500 dark:text-gray-400 h-16 overflow-auto"></div>
+            <div id="expression" class="text-lg text-gray-500 dark:text-gray-400 h-6 overflow-hidden"></div>
+            <div id="display" class="text-4xl md:text-5xl font-semibold text-black dark:text-white">0</div>
+        </div>
+        
+        <!-- Botões da calculadora -->
+        <div class="calculator-buttons grid grid-cols-4 gap-2 p-4 bg-gray-100 dark:bg-gray-850 rounded-t-3xl">
+            <!-- Linha 1 -->
+            <div class="calculator-button bg-gray-200 dark:bg-gray-700 text-black dark:text-white" data-action="clear">
+                <div class="calculator-button-content">C</div>
+            </div>
+            <div class="calculator-button bg-gray-200 dark:bg-gray-700 text-black dark:text-white" data-action="backspace">
+                <div class="calculator-button-content">⌫</div>
+            </div>
+            <div class="calculator-button bg-gray-200 dark:bg-gray-700 text-black dark:text-white" data-action="percent">
+                <div class="calculator-button-content">%</div>
+            </div>
+            <div class="calculator-button bg-accent text-white" data-action="operator" data-operator="/">
+                <div class="calculator-button-content">÷</div>
+            </div>
+            
+            <!-- Linha 2 -->
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="7">
+                <div class="calculator-button-content">7</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="8">
+                <div class="calculator-button-content">8</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="9">
+                <div class="calculator-button-content">9</div>
+            </div>
+            <div class="calculator-button bg-accent text-white" data-action="operator" data-operator="*">
+                <div class="calculator-button-content">×</div>
+            </div>
+            
+            <!-- Linha 3 -->
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="4">
+                <div class="calculator-button-content">4</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="5">
+                <div class="calculator-button-content">5</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="6">
+                <div class="calculator-button-content">6</div>
+            </div>
+            <div class="calculator-button bg-accent text-white" data-action="operator" data-operator="-">
+                <div class="calculator-button-content">−</div>
+            </div>
+            
+            <!-- Linha 4 -->
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="1">
+                <div class="calculator-button-content">1</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="2">
+                <div class="calculator-button-content">2</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="3">
+                <div class="calculator-button-content">3</div>
+            </div>
+            <div class="calculator-button bg-accent text-white" data-action="operator" data-operator="+">
+                <div class="calculator-button-content">+</div>
+            </div>
+            
+            <!-- Linha 5 -->
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-action="plusMinus">
+                <div class="calculator-button-content">±</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit="0">
+                <div class="calculator-button-content">0</div>
+            </div>
+            <div class="calculator-button bg-gray-100 dark:bg-gray-600 text-black dark:text-white" data-digit=".">
+                <div class="calculator-button-content">.</div>
+            </div>
+            <div class="calculator-button bg-primary text-white" data-action="equals">
+                <div class="calculator-button-content">=</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Atualiza o relógio na barra de status
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        
+        updateClock();
+        setInterval(updateClock, 60000);
+        
+        // Inicializa o modo escuro com base na preferência do usuário
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Lógica da calculadora
+        document.addEventListener('DOMContentLoaded', function() {
+            const display = document.getElementById('display');
+            const expression = document.getElementById('expression');
+            const history = document.getElementById('history');
+            
+            let currentValue = '0';
+            let storedValue = null;
+            let currentOperator = null;
+            let resetDisplayOnNextDigit = false;
+            let expressionString = '';
+            let calculationHistory = [];
+            
+            // Adiciona efeito de ondulação (ripple) aos botões
+            document.querySelectorAll('.calculator-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                    
+                    // Dispara haptic feedback (vibração) em dispositivos que suportam
+                    if (navigator.vibrate) {
+                        navigator.vibrate(30);
+                    }
+                    
+                    // Lógica dos botões
+                    handleButtonClick(e);
+                });
+            });
+            
+            function handleButtonClick(e) {
+                const button = e.currentTarget;
+                
+                // Handle digit input
+                if (button.hasAttribute('data-digit')) {
+                    const digit = button.getAttribute('data-digit');
+                    handleDigitInput(digit);
+                }
+                
+                // Handle actions
+                if (button.hasAttribute('data-action')) {
+                    const action = button.getAttribute('data-action');
+                    
+                    if (action === 'clear') {
+                        clear();
+                    } else if (action === 'backspace') {
+                        backspace();
+                    } else if (action === 'operator' && button.hasAttribute('data-operator')) {
+                        const operator = button.getAttribute('data-operator');
+                        handleOperator(operator);
+                    } else if (action === 'equals') {
+                        calculate();
+                    } else if (action === 'plusMinus') {
+                        toggleSign();
+                    } else if (action === 'percent') {
+                        calculatePercent();
+                    }
+                }
+                
+                updateDisplay();
+            }
+            
+            function handleDigitInput(digit) {
+                if (resetDisplayOnNextDigit) {
+                    currentValue = '0';
+                    resetDisplayOnNextDigit = false;
+                }
+                
+                if (digit === '.' && currentValue.includes('.')) {
+                    return; // Prevent multiple decimal points
+                }
+                
+                if (currentValue === '0' && digit !== '.') {
+                    currentValue = digit;
+                } else {
+                    currentValue += digit;
+                }
+            }
+            
+            function handleOperator(operator) {
+                calculate(); // Process any pending operation
+                
+                storedValue = parseFloat(currentValue);
+                currentOperator = operator;
+                expressionString = `${storedValue} ${getOperatorSymbol(operator)} `;
+                resetDisplayOnNextDigit = true;
+            }
+            
+            function calculate() {
+                if (currentOperator !== null && storedValue !== null) {
+                    const currentValueNum = parseFloat(currentValue);
+                    const fullExpression = `${expressionString}${currentValue}`;
+                    expressionString += currentValue;
+                    
+                    let result;
+                    switch (currentOperator) {
+                        case '+':
+                            result = storedValue + currentValueNum;
+                            break;
+                        case '-':
+                            result = storedValue - currentValueNum;
+                            break;
+                        case '*':
+                            result = storedValue * currentValueNum;
+                            break;
+                        case '/':
+                            if (currentValueNum === 0) {
+                                result = 'Erro';
+                            } else {
+                                result = storedValue / currentValueNum;
+                            }
+                            break;
+                    }
+                    
+                    // Adiciona ao histórico
+                    addToHistory(fullExpression, result);
+                    
+                    if (result === 'Erro') {
+                        currentValue = result;
+                    } else {
+                        // Format result to avoid extremely long decimals
+                        currentValue = result.toString();
+                        if (currentValue.includes('.') && currentValue.length > 12) {
+                            const parsed = parseFloat(parseFloat(currentValue).toFixed(10));
+                            currentValue = parsed.toString();
+                        }
+                    }
+                    
+                    storedValue = null;
+                    currentOperator = null;
+                    resetDisplayOnNextDigit = true;
+                }
+            }
+            
+            function addToHistory(expression, result) {
+                if (typeof result === 'number') {
+                    calculationHistory.push({
+                        expression: expression,
+                        result: result
+                    });
+                    
+                    // Limita o histórico a 5 itens
+                    if (calculationHistory.length > 5) {
+                        calculationHistory.shift();
+                    }
+                    
+                    // Atualiza a exibição do histórico
+                    updateHistoryDisplay();
+                }
+            }
+            
+            function updateHistoryDisplay() {
+                history.innerHTML = '';
+                calculationHistory.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'text-right';
+                    historyItem.textContent = `${item.expression} = ${formatNumber(item.result)}`;
+                    history.appendChild(historyItem);
+                });
+                
+                // Rola para o item mais recente
+                history.scrollTop = history.scrollHeight;
+            }
+            
+            function formatNumber(num) {
+                if (Math.abs(num) >= 1e12 || (Math.abs(num) < 0.000001 && num !== 0)) {
+                    return num.toExponential(6);
+                }
+                
+                const numStr = num.toString();
+                if (numStr.includes('.')) {
+                    const intPart = numStr.split('.')[0];
+                    const maxDecimalPlaces = Math.max(1, 10 - intPart.length);
+                    
+                    if (numStr.length > 12) {
+                        return parseFloat(num.toFixed(maxDecimalPlaces)).toString();
+                    }
+                }
+                
+                return numStr;
+            }
+            
+            function clear() {
+                currentValue = '0';
+                storedValue = null;
+                currentOperator = null;
+                expressionString = '';
+                resetDisplayOnNextDigit = false;
+            }
+            
+            function backspace() {
+                if (currentValue.length > 1) {
+                    currentValue = currentValue.slice(0, -1);
+                } else {
+                    currentValue = '0';
+                }
+            }
+            
+            function toggleSign() {
+                if (currentValue !== '0' && currentValue !== 'Erro') {
+                    if (currentValue.startsWith('-')) {
+                        currentValue = currentValue.slice(1);
+                    } else {
+                        currentValue = '-' + currentValue;
+                    }
+                }
+            }
+            
+            function calculatePercent() {
+                const value = parseFloat(currentValue);
+                currentValue = (value / 100).toString();
+            }
+            
+            function getOperatorSymbol(operator) {
+                switch (operator) {
+                    case '+': return '+';
+                    case '-': return '−';
+                    case '*': return '×';
+                    case '/': return '÷';
+                    default: return operator;
+                }
+            }
+            
+            function updateDisplay() {
+                // Limit displayed length to prevent overflow
+                let displayText = currentValue;
+                if (displayText.length > 12 && !displayText.includes('Erro')) {
+                    if (parseFloat(displayText) >= 1e12 || parseFloat(displayText) <= -1e12) {
+                        displayText = parseFloat(displayText).toExponential(6);
+                    } else if (displayText.includes('.')) {
+                        const intPart = displayText.split('.')[0];
+                        const maxDecimalPlaces = Math.max(1, 10 - intPart.length);
+                        displayText = parseFloat(displayText).toFixed(maxDecimalPlaces);
+                        // Remove trailing zeros
+                        displayText = parseFloat(displayText).toString();
+                    }
+                }
+                
+                display.textContent = displayText;
+                expression.textContent = expressionString;
+            }
+        });
+        
+        // Código do Service Worker para PWA
+        // Este código será extraído para um arquivo separado ao converter para APK
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                // Registrando um service worker inline mínimo
+                const swContent = `
+                    self.addEventListener('install', (event) => {
+                        self.skipWaiting();
+                    });
+                    
+                    self.addEventListener('activate', (event) => {
+                        return self.clients.claim();
+                    });
+                    
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(fetch(event.request));
+                    });
+                `;
+                
+                const blob = new Blob([swContent], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(function(registration) {
+                        console.log('Service Worker registrado com sucesso:', registration);
+                    })
+                    .catch(function(error) {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Previne gestos de zoom e outros comportamentos indesejados
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Previne a seleção de texto
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
